@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 import threading
 import time
+import queue
 
 import pytest
 
@@ -114,6 +115,24 @@ def test_tray_startup_timeout_exposes_fallback_before_enabling_input(monkeypatch
     c.tick()
     assert [call[0] for call in calls.mock_calls] == ['show', 'ready']
     assert c.ui_mode == 'panel'
+
+
+def test_start_cannot_reach_input_without_ready_local_stop_controls(monkeypatch, tmp_path):
+    c = controller(monkeypatch, tmp_path)
+    c.ui_ready = Mock()
+    c.ui_ready.wait.return_value = False
+    c.requests = queue.Queue()
+    c.requests.put({'id': 'start', 'command': 'start', 'epoch': 0,
+                    'args': {'task': 'test local controls', 'window_id': 42}})
+    c.busy, c.audit = Mock(), Mock()
+    replies = []
+    def respond(_id, **reply):
+        replies.append(reply)
+        c.running = False
+    c.respond = respond
+    c.worker()
+    c.backend.start.assert_not_called()
+    assert 'not ready' in replies[0]['err']
 
 
 def indicator():
