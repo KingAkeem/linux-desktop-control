@@ -36,15 +36,21 @@ input backend or temporary runtime directory was used.
   `LDC: active`, `LDC: stopped`, or `LDC: ready` label. The registered menu and
   label were verified through read-only inspection of this indicator.
 
-## Remaining manual checks
+## Coverage limits and final state
 
-The user-facing menu and local Resume round trip are awaiting the user's
-confirmation. Tray events only open the local panel; the actual local Resume
-click is deliberately outside tool control. A clean live start after the
-startup-flash fix also remains to be checked after local Resume.
+The user ended the test and asked to use the collected results. The user-facing
+menu and local Resume round trip were not confirmed. Tray events only open
+the local panel; the actual local Resume click is deliberately outside tool
+control. A clean live start after the startup-flash fix was not exercised.
+These checks remain unverified, rather than passed or awaiting another action.
 
 Tray/host loss and missing-binding fallback were tested with injected states;
 the desktop's shared indicator host was not disabled during the live trial.
 The emergency shortcut was successfully grabbed at controller startup, but a
 new physical shortcut press was not exercised in this trial. These results
 do not establish support for other desktops, tray implementations, or Wayland.
+
+The test was ended through `desktop_stop`. Final status confirmed input
+inactive, no selected target, and Stop still latched. The controller and tray
+were closed without clearing permission. The implementation remains local;
+no new GitHub publication was made.
