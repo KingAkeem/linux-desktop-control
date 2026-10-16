@@ -1,6 +1,8 @@
 """Tray visibility and local-permission regressions. No desktop input."""
 from types import SimpleNamespace
 from unittest.mock import Mock
+import threading
+import time
 
 import pytest
 
@@ -21,6 +23,9 @@ def controller(monkeypatch, tmp_path):
     c.panel_requested = False
     c.running = True
     c.ui_mode = 'panel'
+    c.ui_started = time.monotonic()
+    c.ui_ready = threading.Event()
+    c.ui_ready.set()
     return c
 
 
@@ -84,6 +89,30 @@ def test_missing_tray_keeps_panel_visible(monkeypatch, tmp_path, indicator):
     c.tick()
     c.window.show.assert_called_once()
     c.window.hide.assert_not_called()
+    assert c.ui_mode == 'panel'
+
+
+def test_waiting_for_tray_does_not_flash_a_panel_or_enable_input(monkeypatch, tmp_path):
+    c = controller(monkeypatch, tmp_path)
+    c.tray = SimpleNamespace(available=False)
+    c.ui_ready.clear()
+    c.tick()
+    c.window.show.assert_not_called()
+    assert not c.ui_ready.is_set()
+
+
+def test_tray_startup_timeout_exposes_fallback_before_enabling_input(monkeypatch, tmp_path):
+    c = controller(monkeypatch, tmp_path)
+    c.tray = SimpleNamespace(available=False)
+    c.ui_ready.clear()
+    c.ui_started -= 2
+    calls = Mock()
+    calls.attach_mock(c.window.show, 'show')
+    c.ui_ready = Mock()
+    c.ui_ready.is_set.return_value = False
+    calls.attach_mock(c.ui_ready.set, 'ready')
+    c.tick()
+    assert [call[0] for call in calls.mock_calls] == ['show', 'ready']
     assert c.ui_mode == 'panel'
 
 

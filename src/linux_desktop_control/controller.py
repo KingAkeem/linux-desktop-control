@@ -61,14 +61,21 @@ class Controller:
         self.resume.connect('clicked', self.resume_local)
         box.pack_start(self.resume, True, True, 0)
         self.window.add(box)
-        self.window.show_all()
+        box.show_all()
+        self.window.realize()
         self.backend.ignore_windows.add(self.window.get_window().get_xid())
         self.panel_requested = (runtime_dir() / 'stopped').exists()
-        self.ui_mode = 'panel'
+        self.ui_mode = 'initializing'
+        self.ui_ready = threading.Event()
+        self.ui_started = time.monotonic()
         self.tray = create_tray(stop=lambda: self.backend.stop(latch=True),
                                show_controls=self.show_controls,
                                quit_controller=self.quit_local,
                                unavailable=self.tray_unavailable)
+        if self.tray is None or self.panel_requested:
+            self.window.show()
+            self.ui_mode = 'panel'
+            self.ui_ready.set()
         GLib.timeout_add(50, self.tick)
 
     def grab_shortcut(self):
@@ -95,11 +102,15 @@ class Controller:
         if self.tray is not None and self.tray.available:
             self.tray.update(active, latched)
             self.ui_mode = 'tray'
+            self.ui_ready.set()
             if not self.panel_requested:
                 self.window.hide()
         else:
+            if not self.ui_ready.is_set() and time.monotonic() - self.ui_started < 0.75:
+                return self.running
             self.ui_mode = 'panel'
             self.window.show()
+            self.ui_ready.set()
         return self.running
 
     def handle_input(self, event):
@@ -203,6 +214,8 @@ class Controller:
                 if cmd == 'start':
                     if not args.get('task', '').strip():
                         raise DesktopError('A task description is required.')
+                    if not self.ui_ready.wait(timeout=1):
+                        raise DesktopError('Local Stop controls are not ready; no input was sent.')
                     if time.monotonic() - self.last_physical_input < 1:
                         raise DesktopError('Physical input is active. Wait until the user has handed over the desktop.')
                     result = self.backend.start(args['window_id'], req['epoch'])
