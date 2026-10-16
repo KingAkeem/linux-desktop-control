@@ -48,8 +48,9 @@ class TrayControls:
         self.menu.append(quit_item)
         self.menu.show_all()
         self.indicator = Indicator.Indicator.new(f'linux-desktop-control-{os.getpid()}',
-            'process-stop-symbolic', Indicator.IndicatorCategory.APPLICATION_STATUS)
+            'input-keyboard-symbolic', Indicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_title('Linux Desktop Control')
+        self.indicator.set_label('LDC: stopped', 'LDC: stopped')
         self.indicator.set_menu(self.menu)
         self.indicator.connect('connection-changed', self.connection_changed)
         self.subscription = self.bus.signal_subscribe(WATCHER,
@@ -96,8 +97,9 @@ class TrayControls:
                  'Stopped · local Resume required' if latched else 'Ready for a new task')
         self.state.set_label(label)
         self.resume_item.set_sensitive(latched)
-        self.indicator.set_icon_full('input-keyboard-symbolic' if active else
-                                     'process-stop-symbolic', label)
+        self.indicator.set_icon_full('input-keyboard-symbolic', label)
+        self.indicator.set_label('LDC: active' if active else
+                                 'LDC: stopped' if latched else 'LDC: ready', 'LDC: stopped')
 
     def close(self):
         self.closed = True

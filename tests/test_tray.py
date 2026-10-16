@@ -120,6 +120,18 @@ def test_watcher_loss_reports_unavailable():
     t.unavailable.assert_called_once()
 
 
+def test_icon_identity_stays_stable_when_physical_takeover_changes_status():
+    t = indicator()
+    t.previous = None
+    t.state, t.resume_item, t.indicator = Mock(), Mock(), Mock()
+    t.update(True, False)
+    t.update(False, True)
+    assert [call.args[0] for call in t.indicator.set_icon_full.call_args_list] == [
+        'input-keyboard-symbolic', 'input-keyboard-symbolic']
+    assert [call.args[0] for call in t.indicator.set_label.call_args_list] == [
+        'LDC: active', 'LDC: stopped']
+
+
 def test_optional_tray_failure_falls_back(monkeypatch):
     monkeypatch.setattr(tray, 'TrayControls', Mock(side_effect=ValueError('Missing optional typelib')))
     assert tray.create_tray() is None
