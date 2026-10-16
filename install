@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in
+  ""|--register) ;;
+  *) echo "Usage: ./install [--register]" >&2; exit 2 ;;
+esac
+if [ "$#" -gt 1 ]; then
+  echo "Usage: ./install [--register]" >&2
+  exit 2
+fi
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+/usr/bin/python3 -c 'import sys; assert sys.version_info >= (3, 12), "Python 3.12 or newer is required"; import gi; gi.require_version("Gtk", "3.0")' || {
+  echo "Install Python 3.12+, python3-venv, python3-gi and gir1.2-gtk-3.0 first. See README.md." >&2
+  exit 1
+}
+/usr/bin/python3 -m venv --system-site-packages "$project_dir/.venv"
+"$project_dir/.venv/bin/python" -m pip install -r "$project_dir/requirements.lock"
+"$project_dir/.venv/bin/python" -m pip install --no-deps -e "$project_dir"
+"$project_dir/.venv/bin/linux-desktop-control" doctor
+if [ "${1:-}" = "--register" ]; then
+  "$project_dir/.venv/bin/linux-desktop-control" register
+fi

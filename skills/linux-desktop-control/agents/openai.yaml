@@ -1,0 +1,12 @@
+interface:
+  display_name: "Linux Desktop Control"
+  short_description: "Operate Linux desktop apps and games locally"
+  default_prompt: "Use $linux-desktop-control to inspect and operate the requested desktop application."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "linux-desktop-control"
+      description: "Local X11 desktop control server"
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,49 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-venv python3-gi gir1.2-gtk-3.0 libglib2.0-bin
+      - name: Install dependencies
+        run: |
+          /usr/bin/python3 -m venv --system-site-packages .venv
+          .venv/bin/python -m pip install -r requirements.lock
+          .venv/bin/python -m pip install --no-deps -e .
+          .venv/bin/python -m pip install build==1.6.1 ruff==0.17.1 pip-audit==2.10.1
+      - name: Check code and dependencies
+        run: |
+          .venv/bin/ruff check src tests --select F
+          .venv/bin/python -m pytest -q
+          .venv/bin/pip-audit -r requirements.lock --no-deps --disable-pip
+          sh -n install launch
+          git diff --check
+      - name: Build and check distributions
+        run: |
+          .venv/bin/python -m build
+          /usr/bin/python3 -m venv --system-site-packages /tmp/wheel-check
+          /tmp/wheel-check/bin/python -m pip install -r requirements.lock
+          /tmp/wheel-check/bin/python -m pip install --no-deps dist/*.whl
+          cd /tmp
+          CODEX_HOME="$(mktemp -d)" /tmp/wheel-check/bin/python - <<'PY'
+          from linux_desktop_control.cli import register
+          from linux_desktop_control.paths import skill_source
+          assert (skill_source() / 'SKILL.md').is_file()
+          assert register()['registered']
+          assert not register(remove=True)['registered']
+          PY
