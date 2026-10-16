@@ -19,6 +19,7 @@ from Xlib import X, XK, display
 from Xlib.ext import xinput
 
 from .backend import Backend, DesktopError, SessionLock, lock_state, runtime_dir, emergency_release
+from .tray import create_tray
 
 
 class Controller:
@@ -62,6 +63,12 @@ class Controller:
         self.window.add(box)
         self.window.show_all()
         self.backend.ignore_windows.add(self.window.get_window().get_xid())
+        self.panel_requested = (runtime_dir() / 'stopped').exists()
+        self.ui_mode = 'panel'
+        self.tray = create_tray(stop=lambda: self.backend.stop(latch=True),
+                               show_controls=self.show_controls,
+                               quit_controller=self.quit_local,
+                               unavailable=self.tray_unavailable)
         GLib.timeout_add(50, self.tick)
 
     def grab_shortcut(self):
@@ -83,7 +90,16 @@ class Controller:
             self.handle_input(event)
         active = self.backend.active
         self.label.set_text(('Controlling window ' + str(self.backend.target)) if active else 'Stopped')
-        self.resume.set_visible((runtime_dir() / 'stopped').exists())
+        latched = (runtime_dir() / 'stopped').exists()
+        self.resume.set_visible(latched)
+        if self.tray is not None and self.tray.available:
+            self.tray.update(active, latched)
+            self.ui_mode = 'tray'
+            if not self.panel_requested:
+                self.window.hide()
+        else:
+            self.ui_mode = 'panel'
+            self.window.show()
         return self.running
 
     def handle_input(self, event):
@@ -101,9 +117,31 @@ class Controller:
         # Never exposed through MCP or IPC. The controller is excluded as an input target.
         (runtime_dir() / 'stopped').unlink(missing_ok=True)
         self.label.set_text('Ready for a new task')
+        self.panel_requested = False
+        if self.tray is not None and self.tray.available:
+            self.window.hide()
+
+    def show_controls(self):
+        # Opening controls is safe over IPC; granting Resume permission is not exposed.
+        self.backend.stop(latch=True)
+        self.panel_requested = True
+        self.window.show_all()
+        return False
+
+    def tray_unavailable(self):
+        # Losing the only persistent Stop control cannot leave input running.
+        self.show_controls()
+
+    def quit_local(self):
+        self.backend.stop(latch=True)
+        self.shutdown()
 
     def close_window(self, *_):
         self.backend.stop(latch=True)
+        if self.tray is not None and self.tray.available:
+            self.panel_requested = False
+            self.window.hide()
+            return True
         self.shutdown()
         return False
 
@@ -172,7 +210,9 @@ class Controller:
                     if not self.backend.active:
                         raise DesktopError('Start a session first.')
                     result = self.backend.select(args['window_id'])
-                elif cmd == 'status': result = self.backend.status()
+                elif cmd == 'status':
+                    result = self.backend.status()
+                    result['controller_ui'] = self.ui_mode
                 elif cmd == 'windows': result = self.backend.windows()
                 elif cmd == 'capture': result = self.backend.capture(**args)
                 elif cmd == 'action': result = self.backend.action(args)
@@ -180,6 +220,8 @@ class Controller:
                 success = True
                 self.respond(req['id'], result=result)
             except Exception as exc:
+                if cmd == 'start' and (runtime_dir() / 'stopped').exists():
+                    GLib.idle_add(self.show_controls)
                 # Never include request payloads or backend errors containing private data.
                 message = str(exc) if isinstance(exc, DesktopError) else 'Desktop operation failed; inspect state before retrying.'
                 self.respond(req['id'], err=message)
@@ -230,6 +272,8 @@ class Controller:
         try:
             Gtk.main()
         finally:
+            if self.tray is not None:
+                self.tray.close()
             self.backend.close()
             self.hotkeys.close()
             self.lock.close()

@@ -1,8 +1,8 @@
 # Linux Desktop Control
 
 Let Codex see and control apps on your Linux desktop through a local MCP server.
-It can click, type, scroll, drag, and paste text, with a visible Stop button so
-you can take back control.
+It can click, type, scroll, drag, and paste text, with Stop controls in a tray
+menu or a fallback panel so you can take back control.
 
 **Beta 0.1.0b2:** tested on **Ubuntu GNOME, X11, and Python 3.12**.
 **Wayland is not supported.** Other setups and MCP clients are unverified.
@@ -50,6 +50,11 @@ and shares your pointer and keyboard. Stay present while it runs.
 **Ctrl+Alt+Escape**. Detection is reactive, so your first input may still reach
 the app. A latched Stop needs a local **Resume permission** click before a new
 task can start.
+
+For tray controls on Ubuntu, install `gir1.2-ayatanaappindicator3-0.1`. With a
+working indicator host, the panel stays hidden while you operate. Use the tray
+menu's **Resume permission…** to open the local confirmation panel. Losing
+the tray stops input and restores the panel. [Details](docs/REFERENCE.md#taking-back-control).
 
 This is not an OS sandbox. Screenshots go to your MCP client, where its normal
 data handling applies. Keep sensitive apps closed during initial testing.

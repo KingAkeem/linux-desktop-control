@@ -59,12 +59,19 @@ def doctor():
     """Check dependencies and desktop readiness without starting input control."""
     value = {'compatible': False, 'session_type': os.environ.get('XDG_SESSION_TYPE'),
              'python_supported': sys.version_info >= (3, 12), 'gtk_available': False,
+             'tray_binding_available': False,
              'gdbus_available': shutil.which('gdbus') is not None, 'xinput2_available': False}
     try:
         import gi
         gi.require_version('Gtk', '3.0')
         from gi.repository import Gtk  # noqa: F401
         value['gtk_available'] = True
+        try:
+            gi.require_version('AyatanaAppIndicator3', '0.1')
+            from gi.repository import AyatanaAppIndicator3  # noqa: F401
+            value['tray_binding_available'] = True
+        except (ImportError, ValueError):
+            pass
     except (ImportError, ValueError):
         pass
     try:

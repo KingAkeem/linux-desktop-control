@@ -85,7 +85,7 @@ For a first check, open a disposable text editor window and ask your assistant:
 > Use Linux Desktop Control to select the empty editor, type Hello Linux,
 > capture the result, and stop.
 
-Verify the screenshot and the visible Stop panel. For a repeatable fixture demo,
+Verify the screenshot and the tray icon or visible Stop panel. For a repeatable fixture demo,
 see the live validation commands below. Keep real documents and sensitive apps
 closed during initial testing.
 
@@ -93,7 +93,21 @@ closed during initial testing.
 
 Click **Stop** or press **Ctrl+Alt+Escape**. Physical keyboard input, mouse clicks, and mouse movement also stop control. The controller distinguishes XTEST input from physical XInput2 sources without recording key contents. Detection is reactive: the first physical input can still reach the focused application, and input already delivered cannot be undone. Leave the desktop idle while a task runs.
 
-A local stop remains latched until **Resume permission** is clicked locally. MCP has no resume operation. Clicking Resume permits a new `desktop_start`; it does not resume an interrupted action. Closing the panel latches Stop too; a later start opens a panel where permission can be resumed. Never reset the latch through scripts to bypass a user's stop.
+A local stop remains latched until **Resume permission** is clicked locally. MCP has no resume operation. Clicking Resume permits a new `desktop_start`; it does not resume an interrupted action. Never reset the latch through scripts or tray events to bypass a user's stop.
+
+The controller uses a tray icon when the optional `gir1.2-ayatanaappindicator3-0.1`
+binding and a registered indicator host are available. The menu shows active,
+stopped, or ready status, and offers Stop, Resume permission, Show controls,
+and Stop and quit. The panel stays hidden during normal operation. Opening
+controls stops input and latches Stop. The tray's Resume entry only opens the
+panel; the local panel click grants permission and hides it again.
+
+If the binding or host is missing, the existing panel is used. Losing a
+connected indicator, watcher, or host stops input, latches Stop, and restores
+the panel. Closing the panel in tray mode hides it and latches Stop; in panel
+mode it stops and exits. `desktop_stop` and Stop and quit close the controller
+and remove the icon, releasing ownership for another chat. A later start with
+Stop latched opens the local permission panel.
 
 Only one controller can own a display session. The controller refuses to run if the emergency shortcut is unavailable. Unexpected focus changes block further input. Lock or unknown lock state, missing controller heartbeat, controller crash, and MCP disconnect stop input. Held keys and buttons are released, with crash recovery handled by the MCP parent.
 
