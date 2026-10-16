@@ -157,6 +157,7 @@ def read_tree(frame, api, max_nodes, max_depth, include_text, deadline):
     truncated = False
     failures = 0
     attempted = 0
+    omitted_hidden_controls = 0
     while queue and attempted < max_nodes and time.monotonic() < deadline:
         node, parent, depth = queue.popleft()
         attempted += 1
@@ -204,6 +205,12 @@ def read_tree(frame, api, max_nodes, max_depth, include_text, deadline):
                 try:
                     child = node.get_child_at_index(i)
                     if child is not None:
+                        # Menus and toolbars can expose hundreds of hidden controls.
+                        # Preserve the read budget for the current app content.
+                        if role in ('menu', 'menu bar', 'tool bar') and not child.get_state_set().contains(api.StateType.SHOWING):
+                            omitted_hidden_controls += 1
+                            truncated = True
+                            continue
                         queue.append((child, index, depth+1))
                     else:
                         failures += 1
@@ -212,6 +219,7 @@ def read_tree(frame, api, max_nodes, max_depth, include_text, deadline):
         except Exception:
             failures += 1
     return {'nodes': nodes, 'truncated': truncated or bool(queue), 'read_errors': failures,
+            'omitted_hidden_controls': omitted_hidden_controls,
             'limits': {'max_nodes': max_nodes, 'max_depth': max_depth, 'field_characters': MAX_FIELD}}
 
 

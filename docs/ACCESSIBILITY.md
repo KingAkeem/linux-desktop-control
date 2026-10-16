@@ -49,6 +49,15 @@ Defaults are 200 nodes and depth 16; hard limits are 500 nodes, depth 32,
 time budgets, and a fresh helper process is killed after seven seconds. A busy
 reader rejects another request rather than queuing it. Partial trees report
 `truncated` and `read_errors`; no completeness is implied by a successful call.
+Hidden children of menus and toolbars are omitted so closed commands do not
+crowd out document content. These omissions set `truncated` and are counted in
+`omitted_hidden_controls`. Other application controls or text may still be
+unavailable or outside the read limits.
+
+The real-app trial read document text in LibreOffice Writer 24.2.7.2. Its Find
+bar controls were exposed, but its search field value was not. GNOME Text
+Editor 46.3 failed the strict frame-geometry match on this host and returned
+no content. This does not establish support for other GTK 4 apps.
 
 Bounds use screen coordinates. Node indices identify observations only and
 cannot perform actions. Inspect a fresh `desktop_capture` and use its

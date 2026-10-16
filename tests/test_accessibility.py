@@ -131,6 +131,22 @@ def test_text_interface_failure_preserves_the_node():
     assert result['read_errors'] == 1
 
 
+@pytest.mark.parametrize('role', ['menu', 'menu bar', 'tool bar'])
+def test_hidden_controls_do_not_crowd_out_document_text(role):
+    hidden = Node(name='hidden command')
+    hidden.get_name = Mock(side_effect=AssertionError('hidden command content must not be read'))
+    opened = Node(name='open command')
+    opened.get_state_set = lambda: SimpleNamespace(contains=lambda state: state in ('VISIBLE', 'SHOWING'))
+    menu = Node(role=role, children=[hidden]*10+[opened])
+    document = Node(role='document text', children=[Node(role='paragraph', text='real document')])
+    result = ax.read_tree(Node(children=[menu, document]), API, 20, 16, True, time.monotonic()+1)
+    assert any(row.get('text') == 'real document' for row in result['nodes'])
+    assert any(row.get('name') == 'open command' for row in result['nodes'])
+    assert result['omitted_hidden_controls'] == 10
+    assert result['truncated'] and result['read_errors'] == 0
+    hidden.get_name.assert_not_called()
+
+
 def test_byte_limit_is_valid_json_with_visible_truncation():
     result = {'nodes': [{'index': i, 'name': '\u2603'*256} for i in range(200)], 'truncated': False}
     data = ax.encode_result(result)
