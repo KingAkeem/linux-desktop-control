@@ -79,6 +79,8 @@ client configuration, use `./install` without `--register`.
 - [Security and privacy](SECURITY.md): access boundaries and vulnerability reports.
 - [Contributing](CONTRIBUTING.md): development checks and bug reports.
 - [Verification](VERIFICATION.md) and [changelog](CHANGELOG.md).
+- [Optional accessibility companion](docs/ACCESSIBILITY.md): isolated, read-only
+  AT-SPI observations alongside the existing input controller.
 
 Native Wayland, remote access, separate background desktops, and accessibility
 element targeting are outside this beta's scope. It does not add Codex's
