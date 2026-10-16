@@ -1,5 +1,9 @@
 # Beta verification
 
+For the optional accessibility companion in 0.1.0b2, see the
+[fixture and real-app trial results](docs/ACCESSIBILITY_VERIFICATION.md).
+The following section records the original input-controller beta checks.
+
 Verified locally on October 16, 2026, for version 0.1.0b1. The host runs
 Ubuntu GNOME on X11 with Python 3.12 and a 3440 × 1440 display.
 
