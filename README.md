@@ -4,7 +4,7 @@ Let Codex see and control apps on your Linux desktop through a local MCP server.
 It can click, type, scroll, drag, and paste text, with Stop controls in a tray
 menu or a fallback panel so you can take back control.
 
-**Beta 0.1.0b2:** tested on **Ubuntu GNOME, X11, and Python 3.12**.
+**Beta 0.1.0b3:** tested on **Ubuntu GNOME, X11, and Python 3.12**.
 **Wayland is not supported.** Other setups and MCP clients are unverified.
 This is an independent project, available under the [MIT license](LICENSE).
 

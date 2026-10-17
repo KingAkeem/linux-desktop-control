@@ -1,3 +1,69 @@
+# Linux Desktop Control 0.1.0b3
+
+This prerelease moves controller status and Stop into a tray menu so the
+panel can stay hidden during normal operation. The icon keeps a stable
+keyboard symbol with an `LDC: active`, `LDC: stopped`, or `LDC: ready` label.
+
+## Behavior
+
+- The menu offers Stop, Resume permission, Show controls, and Stop and quit.
+- Resume permission opens the local panel. It cannot clear Stop through a
+  tray event or MCP call. A local click grants permission for a new task;
+  it does not restart an interrupted action.
+- Physical takeover and Ctrl+Alt+Escape retain their existing implementations.
+  The input backend, clipboard handling, MCP commands, ownership, watchdog,
+  and read-only accessibility companion retain their existing behavior.
+- If tray support is unavailable, the controller uses the panel. Losing a
+  connected tray stops input, latches Stop, and restores the panel.
+- Input waits for local Stop controls to become ready at startup. Closing
+  the panel in tray mode hides it and latches Stop. `desktop_stop` or Stop
+  and quit closes the controller and releases ownership for another chat.
+
+## Verified results
+
+84 automated tests passed, including the existing input and accessibility
+companion suites. Live typing in a disposable Text Editor tab succeeded
+with the persistent panel hidden. Physical mouse takeover stopped input,
+latched Stop, and caused a subsequent typing request to be rejected.
+
+The indicator's registered menu and stable label were checked through
+read-only inspection. The trial ended with input inactive, no selected
+target, and Stop still latched.
+
+## Manual checks not completed
+
+These checks are **unverified**, not passed:
+
+- User confirmation that the revised menu is easy to find and that choosing
+  Resume permission opens the panel, followed by a successful local Resume
+  click and panel dismissal.
+- A clean live start after the final startup-flash fix.
+- Real tray/host loss and missing-binding fallback during the live trial.
+  These paths have injected tests; the desktop's shared tray host was not disabled.
+- A new physical Ctrl+Alt+Escape press in this trial. The shortcut was
+  successfully grabbed at startup, and its handling remains unchanged.
+
+The trial was ended at the user's request using the results already collected.
+No tool cleared or synthesized local Resume permission.
+
+## Setup and scope
+
+On Ubuntu, tray mode needs `gir1.2-ayatanaappindicator3-0.1` and a working
+indicator host. Without them, the panel remains available. No GNOME extension
+or desktop setting is enabled automatically. The icon is present while the
+controller is running; stopping the controller removes it.
+
+Testing remains limited to Ubuntu GNOME on X11 with Python 3.12. Wayland is
+unsupported, and other desktop/tray implementations remain unverified.
+The accessibility companion's existing limitations still apply.
+
+See the [tray trial results](https://github.com/KingAkeem/linux-desktop-control/blob/v0.1.0b3/docs/TRAY_VERIFICATION.md),
+[control reference](https://github.com/KingAkeem/linux-desktop-control/blob/v0.1.0b3/docs/REFERENCE.md#taking-back-control),
+and [companion guide](https://github.com/KingAkeem/linux-desktop-control/blob/v0.1.0b3/docs/ACCESSIBILITY.md).
+The project remains MIT licensed.
+
+---
+
 # Linux Desktop Control 0.1.0b2
 
 This prerelease adds an optional read-only accessibility companion alongside

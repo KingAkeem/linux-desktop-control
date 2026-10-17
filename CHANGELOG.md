@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0b3
+
+Moves controller status and Stop into a tray menu when the optional Ubuntu
+indicator binding and a working host are available. The stable keyboard icon
+shows an `LDC` status label; the panel is used for local Resume or fallback.
+Tray events can open the panel but cannot grant permission. Physical takeover,
+Ctrl+Alt+Escape, ownership, and the watchdog retain their existing behavior.
+
+84 automated tests passed. Live typing with the panel hidden and physical
+takeover passed. User confirmation of the menu/local Resume round trip and
+a clean live start after the startup-flash fix were not completed. Tray loss
+and missing-binding fallback have injected tests; a new physical emergency
+shortcut press was not exercised. See the
+[tray trial results](docs/TRAY_VERIFICATION.md) for the full coverage limits.
+
 ## 0.1.0b2
 
 Adds an optional, separate read-only accessibility companion using AT-SPI.

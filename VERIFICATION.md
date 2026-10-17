@@ -1,5 +1,8 @@
 # Beta verification
 
+For the tray controller in 0.1.0b3, see the
+[tray trial results and uncompleted manual checks](docs/TRAY_VERIFICATION.md).
+
 For the optional accessibility companion in 0.1.0b2, see the
 [fixture and real-app trial results](docs/ACCESSIBILITY_VERIFICATION.md).
 The following section records the original input-controller beta checks.

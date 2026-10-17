@@ -1,7 +1,7 @@
 # Tray controls verification
 
 Local development on October 16, 2026, on Ubuntu GNOME X11 with Python 3.12.
-This change has not been published to GitHub.
+This record accompanies the 0.1.0b3 prerelease.
 
 ## Automated and package checks
 
@@ -52,5 +52,6 @@ do not establish support for other desktops, tray implementations, or Wayland.
 
 The test was ended through `desktop_stop`. Final status confirmed input
 inactive, no selected target, and Stop still latched. The controller and tray
-were closed without clearing permission. The implementation remains local;
-no new GitHub publication was made.
+were closed without clearing permission. No additional live checks were
+performed for publication; the unverified checks above remain explicit
+prerelease limitations.
